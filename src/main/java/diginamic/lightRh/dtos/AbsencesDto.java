@@ -1,12 +1,10 @@
 package diginamic.lightRh.dtos;
 
 import java.util.Date;
-
-import diginamic.lightRh.entities.Employee;
 import diginamic.lightRh.enums.AbsenceStatusEnum;
 import diginamic.lightRh.enums.AbsenceTypeEnum;
 
-public class absencesDto {
+public class AbsencesDto {
 
 	String email;
     Date dateStart;

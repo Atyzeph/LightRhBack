@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 import diginamic.lightRh.entities.Absence;
 import diginamic.lightRh.entities.Employee;
 import diginamic.lightRh.enums.AbsenceTypeEnum;
+import diginamic.lightRh.exceptions.ConflictWithExistingAbsenceException;
+import diginamic.lightRh.exceptions.InvalidDateRangeException;
 import diginamic.lightRh.repositories.AbsenceRepository;
 import diginamic.lightRh.repositories.EmployeeRepository;
 import diginamic.lightRh.util.DateRangeValidator;
@@ -43,10 +45,10 @@ public class AbsenceService {
 
 		// Dates validation
 		if (startDate.after(endDate)) {
-			throw new IllegalArgumentException("La date de début doit être antérieure ou égale à la date de fin.");
+			throw new InvalidDateRangeException("La date de début doit être antérieure ou égale à la date de fin.");
 		}
 		if(!checkAbsencePeriod(email, startDate, endDate)) {
-			throw new IllegalArgumentException("Cette date entre en conflit avec une date déjà existante.");
+			throw new ConflictWithExistingAbsenceException("Cette date entre en conflit avec une date déjà existante.");
 		}
 		
         // Creating absence
