@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import diginamic.lightRh.entities.Absence;
 import diginamic.lightRh.entities.Employee;
+import diginamic.lightRh.enums.AbsenceStatusEnum;
 import diginamic.lightRh.enums.AbsenceTypeEnum;
 import diginamic.lightRh.repositories.AbsenceRepository;
 import diginamic.lightRh.repositories.EmployeeRepository;
@@ -24,6 +25,31 @@ public class AbsenceService {
     private final AbsenceRepository absenceRepository;
     @Autowired
     private final EmployeeRepository EmployeeRepository;
+    
+    @Transactional(rollbackOn = Exception.class)
+    public void updateAbsenceForEmployee(int id, String email, Date startDate, Date endDate, AbsenceTypeEnum type, Optional<String> motif, Optional<String> label) {
+    	Absence abs = absenceRepository.getReferenceById(id);
+    	if(abs.getStatus() == AbsenceStatusEnum.EN_ATTENTE_VALIDATION || abs.getStatus() == AbsenceStatusEnum.INITIALE) {
+    		
+    		// Dates validation
+    		checkAbsencePeriod(startDate, endDate);
+    		checkConflictsAbsencePeriod(email, startDate, endDate);
+    		
+	        // Obtaining option's values
+	        String absenceMotif = motif.get();
+	        String absenceLabel = label.get();
+	        
+			abs.setDateStart(startDate);
+			abs.setDateEnd(endDate);
+			abs.setType(type);
+			abs.setMotif(absenceMotif);
+			abs.setLabel(absenceLabel);
+			
+			absenceRepository.save(abs);
+    	}else {
+    		throw new IllegalArgumentException("Le statut actuel de la demande ne permet pas une modification.\n" + "Statut actuel : " + abs.getStatus());
+    	}
+    }
     
     @Transactional(rollbackOn = Exception.class)
     public void createAbsenceForEmployee(String email, Date startDate, Date endDate, AbsenceTypeEnum type, Optional<String> motif, Optional<String> label) {
@@ -42,12 +68,8 @@ public class AbsenceService {
 		Employee employee = opEmployee.get();
 
 		// Dates validation
-		if (startDate.after(endDate)) {
-			throw new IllegalArgumentException("La date de début doit être antérieure ou égale à la date de fin.");
-		}
-		if(!checkAbsencePeriod(email, startDate, endDate)) {
-			throw new IllegalArgumentException("Cette date entre en conflit avec une date déjà existante.");
-		}
+		checkAbsencePeriod(startDate, endDate);
+		checkConflictsAbsencePeriod(email, startDate, endDate);
 		
         // Creating absence
 		Absence absence = new Absence(employee, startDate, endDate, absenceMotif, absenceLabel, type);
@@ -56,8 +78,14 @@ public class AbsenceService {
         absenceRepository.save(absence);
     }
     
+    public void checkAbsencePeriod(Date startDate, Date endDate) {
+		if (startDate.after(endDate)) {
+			throw new IllegalArgumentException("La date de début doit être antérieure ou égale à la date de fin.");
+		}
+    }
+    
     // Check if the period is not duplicated
-    public boolean checkAbsencePeriod(String email, Date startDate, Date endDate) {
+    public boolean checkConflictsAbsencePeriod(String email, Date startDate, Date endDate) {
     	
     	Collection<Absence> existingAbsences = getAllAbsencesForEmployee(email);
     		
@@ -77,10 +105,11 @@ public class AbsenceService {
 			try {
 				Date formattedStartDateDb = sdf.parse(strFormattedDbDateStart);
 				Date formattedEndDateDb = sdf.parse(strFormattedDbDateEnd);
-
+				
+				// If the date is in conflict with existing date
 				if (checker.isWithinRange(formattedStartDateDb) && checker.isWithinRange(formattedEndDateDb)) {
 
-					return false;
+					throw new IllegalArgumentException("Cette date entre en conflit avec une date déjà existante.");
 				}
 			} catch (ParseException e) {
 				e.printStackTrace();
