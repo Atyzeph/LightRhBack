@@ -7,7 +7,9 @@ import java.util.Optional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -52,8 +54,8 @@ public class AbsencesController {
 		}
 	}
 
-	@PostMapping("updateAbsence/{id}")
-	public ResponseEntity<Map<String, Object>> updateAbsence(@RequestParam int id, @RequestBody AbsencesDto absencesReq) {
+	@PutMapping("updateAbsence/{id}")
+	public ResponseEntity<Map<String, Object>> updateAbsence(@PathVariable int id, @RequestBody AbsencesDto absencesReq) {
 		try {
 			
 			// Creating optionals objects can maybe null
