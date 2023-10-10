@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import diginamic.lightRh.dtos.AbsencesDto;
 import diginamic.lightRh.services.AbsenceService;
@@ -73,12 +72,12 @@ public class AbsencesController {
 					);
 
 			Map<String, Object> response = new HashMap<>();
-			response.put("Message : ", "Absence updated successfully.");
-			
-			return ResponseEntity.status(HttpStatus.CREATED).body(response);
-		} catch (Exception e) {
-			// TODO: handle exception
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Collections.singletonMap("error", "Failed to update absence"));
-		}
-	}
+			response.put("Message : ", "Absence created successfully.");
+		  return ResponseEntity.status(HttpStatus.CREATED).body(response);
+	  }
+	  catch (Exception e) {
+	        e.printStackTrace();
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Collections.singletonMap("error", "Failed to create absence"));
+	    }
+  }
 }

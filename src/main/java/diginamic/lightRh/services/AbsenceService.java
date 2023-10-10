@@ -25,13 +25,24 @@ public class AbsenceService {
     private final AbsenceRepository absenceRepository;
     @Autowired
     private final EmployeeRepository EmployeeRepository;
+    private final EmployeeService employeeService;
     
     @Transactional(rollbackOn = Exception.class)
     public void updateAbsenceForEmployee(int id, String email, Date startDate, Date endDate, AbsenceTypeEnum type, Optional<String> motif, Optional<String> label) {
     	Absence abs = absenceRepository.getReferenceById(id);
-    	if(abs.getStatus() == AbsenceStatusEnum.EN_ATTENTE_VALIDATION || abs.getStatus() == AbsenceStatusEnum.INITIALE) {
+    	
+    	// Checking status (maybe change for just checking valided status insted of initial or rejected)
+    	if(abs.getStatus() != AbsenceStatusEnum.REJETEE || abs.getStatus() != AbsenceStatusEnum.INITIALE) {		
+    		Collection<?> auth = employeeService.getEmployeeByEmail(email).getAuthorities();
+    		boolean isNotAdmin = !auth.toString().contains("ADMIN");
     		
-    		// Dates validation
+    		// If not admin ...
+    		if(isNotAdmin) {
+    			if(abs.getType() == AbsenceTypeEnum.EMPLOYER_RTT && abs.getStatus() == AbsenceStatusEnum.VALIDEE) throw new IllegalArgumentException("Impossible de de modifier un RTT employeur qui a été validé.");
+    			if(abs.getType() != AbsenceTypeEnum.EMPLOYER_RTT || abs.getType() != AbsenceTypeEnum.HOLIDAY) throw new IllegalArgumentException("Le rôle actuel de l\'utilisateur ne permet pas de modifier cette absence.");
+    		}
+    	
+    		// Checking for date conflicts
     		checkAbsencePeriod(startDate, endDate);
     		checkConflictsAbsencePeriod(email, startDate, endDate);
     		
