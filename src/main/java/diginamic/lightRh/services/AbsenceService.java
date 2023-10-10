@@ -55,6 +55,7 @@ public class AbsenceService {
 			abs.setType(type);
 			abs.setMotif(absenceMotif);
 			abs.setLabel(absenceLabel);
+			abs.setStatus(AbsenceStatusEnum.INITIALE);
 			
 			absenceRepository.save(abs);
     	}else {
